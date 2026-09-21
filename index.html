@@ -1,150 +1,19 @@
-<!doctype html>
-<html lang="ja">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>レミニセンス実機仕様シミュレーター</title>
-<style>
-:root{--bg:#090b0e;--card:#14181d;--line:#303740;--text:#f4f4f4;--muted:#9ca6b2;--red:#d92532;--gold:#d8aa54;--green:#42d392}
-*{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at top,#242a31 0,#0b0d10 34%,#050607 100%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
-.wrap{max-width:620px;margin:auto;padding:18px 14px 42px}.title{text-align:center;font-size:26px;font-weight:900;letter-spacing:.08em;margin:10px 0 4px}.sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:16px}
-.card{background:rgba(20,24,29,.96);border:1px solid var(--line);border-radius:15px;padding:15px;margin:12px 0;box-shadow:0 8px 25px #0007}
-h2{font-size:16px;margin:0 0 11px;color:#fff}.screen{height:220px;border:1px solid #414852;border-radius:12px;background:linear-gradient(#08090b,#181b20);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:hidden;position:relative}
-.screen:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 3px,#fff 4px);opacity:.025}
-.big{font-size:42px;font-weight:1000;z-index:1}.success{color:#ff3345;text-shadow:0 0 18px #d71935}.fail{color:#b5bec9}.role{font-size:19px;font-weight:800;margin-top:9px;z-index:1}.detail{font-size:13px;color:#aab2bc;margin-top:6px;z-index:1}
-button{width:100%;border:0;border-radius:11px;padding:15px;font-size:17px;font-weight:900;color:#fff;background:linear-gradient(180deg,#e22c3c,#a60d1c);margin-top:12px;box-shadow:0 4px 0 #620711;cursor:pointer}
-button:active{transform:translateY(2px);box-shadow:0 2px 0 #620711}.row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.small{font-size:13px;padding:11px;background:#303740;box-shadow:none}
-.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.stat{background:#0b0e12;border-radius:10px;padding:11px;text-align:center}.num{font-size:23px;font-weight:900}.label{font-size:11px;color:var(--muted)}
-table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px 5px;border-bottom:1px solid #303740;text-align:right}th:first-child,td:first-child{text-align:left}th{color:#b7c0ca}
-.note{font-size:12px;color:#a8b0ba;line-height:1.55}.gold{color:var(--gold);font-weight:800}.green{color:var(--green)}
-input{width:100%;background:#090b0e;color:#fff;border:1px solid #414852;border-radius:8px;padding:10px;font-size:16px}.inputs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-</style>
-</head>
-<body><div class="wrap">
-<div class="title">REMINISCENCE</div>
-<div class="sub">東京喰種 レミニセンス実機仕様シミュレーター</div>
-
-<div class="card">
-<div id="screen" class="screen">
- <div class="big">READY</div><div class="role">8GでATを掴め</div>
- <div class="detail">画像の解析値をそのまま使用</div>
-</div>
-<button onclick="play()">レミニセンス開始</button>
-<div class="row">
-<button class="small" onclick="batch(10)">10回</button>
-<button class="small" onclick="batch(1000)">1,000回</button>
-<button class="small" onclick="batch(100000)">10万回</button>
-</div>
-</div>
-
-<div class="card"><h2>シミュレーション結果</h2>
-<div class="stats">
-<div class="stat"><div class="num" id="games">0</div><div class="label">試行</div></div>
-<div class="stat"><div class="num green" id="wins">0</div><div class="label">AT当選</div></div>
-<div class="stat"><div class="num" id="rate">--</div><div class="label">実測AT期待度</div></div>
-<div class="stat"><div class="num" id="streak">0</div><div class="label">最大連敗</div></div>
-</div></div>
-
-<div class="card"><h2>使用している抽選値</h2>
-<table><thead><tr><th>成立役</th><th>1〜7G</th><th>8G目</th><th>設定1確率</th></tr></thead>
-<tbody>
-<tr><td>リプレイ</td><td>&lt;0.1%</td><td>&lt;0.1%</td><td>1/7.3</td></tr>
-<tr><td>斜めベル</td><td>10.94%</td><td>10.94%</td><td>1/131.1</td></tr>
-<tr><td>押し順ベル</td><td>10.94%</td><td>10.94%</td><td>※下記</td></tr>
-<tr><td>弱チェリー</td><td>40.61%</td><td>100%</td><td>1/70.3</td></tr>
-<tr><td>スイカ</td><td>40.61%</td><td>100%</td><td>1/100.5</td></tr>
-<tr><td>強チェリー</td><td>100%</td><td>100%</td><td>1/356.2</td></tr>
-<tr><td>チャンス目</td><td>100%</td><td>100%</td><td>A/B 各1/585.1</td></tr>
-</tbody></table>
-<p class="note">設定1の小役確率：確定チェリー 1/16384、喰揃い 約1/2048。レア役合算は画像記載の <span class="gold">1/31.5</span>。レミニセンスは8G継続、解析上のAT期待度は<span class="gold">約52%</span>。</p>
-<p class="note">押し順ベルは画像に通常時確率の記載がないため、<b>公開されている「AT期待度約52%」と整合するよう内部の押し順ベル成立率を逆算</b>している。したがって「各小役抽選を使った体感シミュレーション」で、実機内部抽選の完全再現を断言するものではない。</p>
-</div>
-
-<div class="card"><h2>自分の実戦データ：52%か検証</h2>
-<div class="inputs"><div><div class="label">成功回数</div><input id="realW" type="number" min="0" value="0"></div>
-<div><div class="label">失敗回数</div><input id="realL" type="number" min="0" value="0"></div></div>
-<button class="small" onclick="checkReal()">実戦値を判定</button>
-<div id="realResult" class="note" style="margin-top:10px">回数を入力すると、公称52%に対する下振れの度合いを表示。</div>
-</div>
-</div>
-
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>REMINISCENCE SLOT</title><style>
+*{box-sizing:border-box}body{margin:0;background:#050506;color:#eee;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}.wrap{max-width:520px;margin:auto;padding:12px}.cab{background:linear-gradient(90deg,#18191b,#3b3d41,#17181a);border:3px solid #555;border-radius:22px;padding:12px;box-shadow:0 15px 45px #000}.logo{text-align:center;font-size:27px;font-weight:1000;letter-spacing:.15em;margin:7px}.top{height:150px;background:radial-gradient(circle,#4a1017,#08090b 70%);border:3px solid #111;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}.game{font-size:15px;color:#aaa}.msg{font-size:27px;font-weight:1000;margin-top:6px}.sub{font-size:12px;color:#aaa;margin-top:5px}.reelbox{margin:12px 3px;background:#050505;border:5px solid #242424;padding:7px;display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.reel{height:135px;background:linear-gradient(#ddd,#fff 45%,#ddd);overflow:hidden;position:relative;border-radius:3px;color:#111}.strip{position:absolute;width:100%;top:-45px;text-align:center}.sym{height:75px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:1000;border-bottom:1px solid #bbb}.panel{background:#111;border:2px solid #333;border-radius:8px;padding:10px}.buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}.stop{height:58px;border-radius:50%;border:4px solid #777;background:radial-gradient(circle,#f3f3f3,#999);font-weight:900}.lever{width:100%;height:62px;border:0;border-radius:12px;background:linear-gradient(#d72b3d,#8e0714);color:#fff;font-size:22px;font-weight:1000;box-shadow:0 5px 0 #50040a}.lever:disabled{opacity:.4}.stats{display:flex;justify-content:space-around;margin-top:9px;font-size:12px;color:#aaa}.stats b{display:block;color:#fff;font-size:18px;text-align:center}
+.freeze{position:fixed;inset:0;background:#000;z-index:30;display:none;align-items:center;justify-content:center;flex-direction:column}.freeze.on{display:flex;animation:flash .12s steps(2) 4}.freeze .b{font-size:55px;font-weight:1000;color:#e51c34;text-shadow:0 0 28px #f22}.kaneki{position:fixed;inset:0;background:#000;z-index:29;display:none;align-items:center;justify-content:center}.kaneki.on{display:flex;animation:reveal .45s ease-out}.kaneki img{width:100%;height:100%;object-fit:cover}.kaneki .caption{position:absolute;bottom:8%;font-size:30px;font-weight:1000;text-shadow:0 2px 10px #000;color:white}@keyframes flash{50%{background:#350006;filter:brightness(2)}}@keyframes reveal{from{opacity:0;transform:scale(1.05)}to{opacity:1;transform:scale(1)}}
+</style></head><body>
+<div id="freeze" class="freeze"><div>REMINISCENCE</div><div class="b">FREEZE</div><div>AT 当選</div></div>
+<div id="kaneki" class="kaneki"><img src="wide_dramatic_anime_illustration_scene_close_up_o.png"><div class="caption">僕の番</div></div>
+<div class="wrap"><div class="cab"><div class="logo">REMINISCENCE</div><div class="top"><div id="game" class="game">0 / 8 G</div><div id="msg" class="msg">レバーON</div><div id="sub" class="sub">8G以内にATを掴め</div></div>
+<div class="reelbox"><div class="reel"><div id="r1" class="strip"></div></div><div class="reel"><div id="r2" class="strip"></div></div><div class="reel"><div id="r3" class="strip"></div></div></div>
+<div class="panel"><div class="buttons"><button class="stop">● STOP</button><button class="stop">● STOP</button><button class="stop">● STOP</button></div><button id="lever" class="lever" onclick="spin()">レバーON</button><div class="stats"><span>挑戦<b id="tries">0</b></span><span>AT<b id="wins">0</b></span><span>実測<b id="rate">--</b></span></div></div></div></div>
 <script>
-// Uploaded image values.
-// Normal-role probabilities. Rare roles are explicit; remaining probability is replay / push-order bell.
-// We calibrate push-order-bell probability so the total 8G AT rate is ~52%, because its occurrence
-// probability isn't supplied in the screenshots.
-const P={
- diagonal:1/131.1, weakCherry:1/70.3, watermelon:1/100.5,
- chanceA:1/585.1, chanceB:1/585.1, strongCherry:1/356.2,
- confirmed:1/16384, kuizoroi:1/2048
-};
-const target=.52;
-
-function rareHitProb(g){
- let x=0;
- x+=P.diagonal*.1094;
- x+=P.weakCherry*(g===8?1:.4061);
- x+=P.watermelon*(g===8?1:.4061);
- x+=(P.chanceA+P.chanceB+P.strongCherry+P.confirmed+P.kuizoroi);
- return x;
-}
-// Treat mutually-exclusive role draw approximately using explicit probabilities.
-// solve pPush such that product(no hit per G)=.48
-let rareNo=1;
-for(let g=1;g<=8;g++) rareNo*=1-rareHitProb(g);
-const pushHit=.1094;
-const pushP=(1-Math.pow((1-target)/rareNo,1/8))/pushHit;
-
-let N=0,W=0,curL=0,maxL=0;
-function drawRole(){
- let r=Math.random(), c=0;
- const arr=[
- ['確定チェリー',P.confirmed],['喰揃い',P.kuizoroi],['チャンス目A',P.chanceA],
- ['チャンス目B',P.chanceB],['強チェリー',P.strongCherry],['弱チェリー',P.weakCherry],
- ['スイカ',P.watermelon],['斜めベル',P.diagonal],['押し順ベル',pushP]
- ];
- for(const [name,p] of arr){c+=p;if(r<c)return name}
- return 'リプレイ/その他';
-}
-function hitRate(role,g){
- if(role==='確定チェリー'||role==='喰揃い'||role==='チャンス目A'||role==='チャンス目B'||role==='強チェリー') return 1;
- if(role==='弱チェリー'||role==='スイカ') return g===8?1:.4061;
- if(role==='斜めベル'||role==='押し順ベル') return .1094;
- return .0005; // <0.1% represented as 0.05%
-}
-function once(){
- let log=[], win=false, decisive='';
- for(let g=1;g<=8;g++){
-  let role=drawRole(), hr=hitRate(role,g), hit=Math.random()<hr;
-  log.push(`${g}G ${role}${hit?' → HIT':''}`);
-  if(hit){win=true;decisive=`${g}G目 ${role}`;break}
- }
- return {win,decisive,log};
-}
-function play(){
- let x=once();record(x.win);
- document.getElementById('screen').innerHTML=x.win?
- `<div class="big success">AT当選</div><div class="role">${x.decisive}</div><div class="detail">${x.log.join(' / ')}</div>`:
- `<div class="big fail">失敗</div><div class="role">8Gスルー</div><div class="detail">${x.log.join(' / ')}</div>`;
-}
-function record(win){N++;if(win){W++;curL=0}else{curL++;maxL=Math.max(maxL,curL)};update()}
-function batch(n){let last;for(let i=0;i<n;i++){last=once();record(last.win)}
- document.getElementById('screen').innerHTML=`<div class="big">${n.toLocaleString()}回完了</div><div class="role">AT ${W.toLocaleString()} / ${N.toLocaleString()}</div><div class="detail">理論目安 約52%</div>`}
-function update(){
- games.textContent=N.toLocaleString();wins.textContent=W.toLocaleString();
- rate.textContent=N?(W/N*100).toFixed(2)+'%':'--';streak.textContent=maxL;
-}
-function checkReal(){
- let w=+realW.value||0,l=+realL.value||0,n=w+l;
- if(!n){realResult.textContent='成功・失敗回数を入力してな。';return}
- let phat=w/n, p=.52;
- // normal approx z, plus exact-ish lower-tail binomial for n <= 5000
- let z=(phat-p)/Math.sqrt(p*(1-p)/n);
- let txt=`実測 ${(phat*100).toFixed(1)}%（${w}/${n}）。52%基準の標準化差 z=${z.toFixed(2)}。`;
- if(z<-1.96) txt+=' かなり強い下振れ（両側5%水準を超える差）。';
- else if(z<-1) txt+=' 下振れしてるが、この回数では普通に起こり得る範囲。';
- else if(z>1.96) txt+=' かなり強い上振れ。';
- else txt+=' 52%から明確におかしいとは言いにくい範囲。';
- realResult.textContent=txt;
-}
+const symbols=['リプレイ','ベル','ベル','ベル','弱チェ','スイカ','ベル','リプレイ','チャンス目'];for(let i=1;i<=3;i++)document.getElementById('r'+i).innerHTML=symbols.map(x=>`<div class="sym">${x}</div>`).join('');
+const P={diag:1/131.1,wc:1/70.3,sw:1/100.5,ca:1/585.1,cb:1/585.1,sc:1/356.2,cc:1/16384,kui:1/2048,push:.625};let g=0,active=false,T=0,W=0,busy=false;
+function draw(){let r=Math.random(),c=0,a=[['確定チェリー',P.cc],['喰揃い',P.kui],['チャンス目',P.ca+P.cb],['強チェリー',P.sc],['弱チェリー',P.wc],['スイカ',P.sw],['斜めベル',P.diag],['押し順ベル',P.push]];for(let x of a){c+=x[1];if(r<c)return x[0]}return'リプレイ'}function hp(x,n){if(['確定チェリー','喰揃い','チャンス目','強チェリー'].includes(x))return 1;if(['弱チェリー','スイカ'].includes(x))return n===8?1:.4061;if(['斜めベル','押し順ベル'].includes(x))return .1094;return .0005}
+function rs(x){if(x.includes('チェリー'))return'弱チェ';if(x==='スイカ')return'スイカ';if(x.includes('ベル'))return'ベル';if(x==='チャンス目'||x==='喰揃い')return'チャンス目';return'リプレイ'}
+function spin(){if(busy)return;if(!active){active=true;g=0;T++}g++;busy=true;lever.disabled=true;msg.textContent='回転中…';game.textContent=`${g} / 8 G`;let role=draw(),hit=Math.random()<hp(role,g),base=rs(role);for(let i=1;i<=3;i++){let el=document.getElementById('r'+i);el.style.transition='none';el.style.transform='translateY(-420px)';setTimeout(()=>{el.style.transition=`transform ${.38+i*.1}s cubic-bezier(.1,.7,.2,1)`;el.style.transform=`translateY(${symbols.indexOf(base)*-75+45}px)`},20)}setTimeout(()=>{busy=false;lever.disabled=false;msg.textContent=role;sub.textContent=`AT抽選 ${(hp(role,g)*100).toFixed(2)}%`;if(hit){W++;active=false;update();showWin()}else if(g===8){active=false;msg.textContent='レミニセンス失敗';sub.textContent='次のレバーONで再挑戦'}else sub.textContent+=' → 非当選';update()},850)}
+function showWin(){busy=true;lever.disabled=true;freeze.classList.add('on');setTimeout(()=>{freeze.classList.remove('on');kaneki.classList.add('on')},1400);setTimeout(()=>{kaneki.classList.remove('on');msg.textContent='AT 当選';sub.textContent='次のレバーONで再挑戦';busy=false;lever.disabled=false},4300)}
+function update(){tries.textContent=T;wins.textContent=W;rate.textContent=T?(W/T*100).toFixed(1)+'%':'--'}
 </script></body></html>
