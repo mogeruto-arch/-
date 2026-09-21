@@ -283,6 +283,112 @@ holdQ=[rollHold(),rollHold(),rollHold(),rollHold(),rollHold()];drawHoldsV2();
   });
 })();
 </script>
+
+<style id="VISUAL-AUDIO-FIX-V6">
+/* 1) 背景に焼き付いた回転図柄を完全に隠す。半透明・blurは一切使わない */
+.r{
+  background:#050008!important;
+  box-shadow:inset 0 0 18px #000,0 0 0 2px #d884ff!important;
+}
+.r img{filter:none!important;opacity:1!important}
+
+/* 回転中は画像をぼかさず、鮮明な図柄が上から下へ流れる */
+.r.spin img{
+  filter:none!important;
+  animation:crispReelV6 .105s linear infinite!important;
+  transform-origin:center!important;
+}
+@keyframes crispReelV6{
+  0%{transform:translate3d(0,-26%,0)}
+  49%{transform:translate3d(0,25%,0)}
+  50%{transform:translate3d(0,-26%,0)}
+  100%{transform:translate3d(0,25%,0)}
+}
+
+/* 2) 焼き込み文字列は「ぼかして隠す」のを廃止。
+      不透明な新しい装飾パネルで領域そのものを作り直す */
+.bakedTextCover{
+  left:3.1%!important;right:3.1%!important;
+  bottom:1.8%!important;height:11.8%!important;
+  border-radius:16px!important;
+  background:#09010d!important;
+  border:2px solid #b94092!important;
+  box-shadow:inset 0 0 0 2px #260626,inset 0 0 18px #7d145c,0 0 12px #e52ca877!important;
+  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+}
+.bakedTextCover:before{
+  top:12%!important;height:3px!important;
+  background:linear-gradient(90deg,transparent,#9d276f,#ffd2ee,#9d276f,transparent)!important;
+}
+.bakedTextCover:after{
+  content:"";position:absolute;left:10%;right:10%;bottom:15%;height:1px;
+  background:linear-gradient(90deg,transparent,#76205d,#d65aa8,#76205d,transparent);
+}
+/* 古い文字演出はDOMに残っていても絶対描画しない */
+.msg,.cinema,.cinemaText{display:none!important}
+</style>
+
+<script id="POKYUUN-V6">
+/* オリジナルの「ポキューン！」系先バレ。
+   低い衝撃→急上昇チャープ→高音のキーン→短い残響 */
+brainAlertFinal=function(){
+ try{
+  const a=au();
+  if(a.state==="suspended") a.resume();
+  const n=a.currentTime;
+
+  const master=a.createGain();
+  const comp=a.createDynamicsCompressor();
+  comp.threshold.value=-16; comp.knee.value=8; comp.ratio.value=8;
+  master.gain.setValueAtTime(.72,n);
+  master.connect(comp); comp.connect(a.destination);
+
+  // "ポッ" impact
+  const sub=a.createOscillator(), sg=a.createGain();
+  sub.type="sine";
+  sub.frequency.setValueAtTime(190,n);
+  sub.frequency.exponentialRampToValueAtTime(72,n+.075);
+  sg.gain.setValueAtTime(.22,n);
+  sg.gain.exponentialRampToValueAtTime(.001,n+.09);
+  sub.connect(sg);sg.connect(master);sub.start(n);sub.stop(n+.1);
+
+  // "キューン" very fast rising chirp
+  [0,.018].forEach((off,j)=>{
+    const o=a.createOscillator(),g=a.createGain();
+    o.type=j?"triangle":"sawtooth";
+    o.frequency.setValueAtTime(j?620:480,n+off);
+    o.frequency.exponentialRampToValueAtTime(j?4700:3900,n+off+.19);
+    g.gain.setValueAtTime(j?.075:.11,n+off);
+    g.gain.exponentialRampToValueAtTime(.001,n+off+.28);
+    o.connect(g);g.connect(master);o.start(n+off);o.stop(n+off+.29);
+  });
+
+  // bright "ーン" tail
+  [3100,4200,5400].forEach((f,i)=>{
+    const o=a.createOscillator(),g=a.createGain();
+    o.type="sine";o.frequency.setValueAtTime(f,n+.13+i*.012);
+    o.frequency.exponentialRampToValueAtTime(f*.88,n+.48);
+    g.gain.setValueAtTime(.055,n+.13+i*.012);
+    g.gain.exponentialRampToValueAtTime(.001,n+.52);
+    o.connect(g);g.connect(master);o.start(n+.13+i*.012);o.stop(n+.53);
+  });
+ }catch(e){}
+};
+
+/* 古い start() / interval の画像切替がblurに見えないよう、
+   毎フレーム別画像へ切替＋縦移動。 */
+window.start=function(){
+ const reels=[...document.querySelectorAll(".r")];
+ reels.forEach(e=>e.classList.add("spin"));
+ let phase=0;
+ return setInterval(()=>{
+   phase++;
+   reels.forEach((e,i)=>{
+     e.querySelector("img").src=REEL[vals[(phase+i)%vals.length]];
+   });
+ },105);
+};
+</script>
 </body></html>
 <style id="hold-v2">
 .holdRail{z-index:22!important;left:11%!important;right:11%!important;top:64.15%!important;height:5.8%!important;gap:3.5%!important;
